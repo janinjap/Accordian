@@ -83,7 +83,7 @@ public abstract class INodeWithAdditionalFields extends INode
    *  clientProtocol are changed; The decoding at the client
    *  side should change accordingly.
    */
-  private byte[] name = null;
+  protected byte[] name = null;
   /** 
    * Permission encoded using {@link PermissionStatusFormat}.
    * Codes other than {@link #clonePermissionStatus(INodeWithAdditionalFields)}

@@ -17,9 +17,6 @@
  */
 package org.apache.hadoop.hdfs;
 
-import static org.apache.hadoop.crypto.key.KeyProvider.KeyVersion;
-import static org.apache.hadoop.crypto.key.KeyProviderCryptoExtension
-    .EncryptedKeyVersion;
 import static org.apache.hadoop.fs.CommonConfigurationKeysPublic.HADOOP_SECURITY_CRYPTO_CODEC_CLASSES_KEY_PREFIX;
 import static org.apache.hadoop.fs.CommonConfigurationKeysPublic.HADOOP_SECURITY_CRYPTO_CIPHER_SUITE_KEY;
 import static org.apache.hadoop.fs.CommonConfigurationKeys.IPC_CLIENT_FALLBACK_TO_SIMPLE_AUTH_ALLOWED_DEFAULT;
@@ -105,7 +102,9 @@ import org.apache.hadoop.crypto.CipherSuite;
 import org.apache.hadoop.crypto.CryptoCodec;
 import org.apache.hadoop.crypto.CryptoInputStream;
 import org.apache.hadoop.crypto.CryptoOutputStream;
+import org.apache.hadoop.crypto.key.KeyProvider.KeyVersion;
 import org.apache.hadoop.crypto.key.KeyProviderCryptoExtension;
+import org.apache.hadoop.crypto.key.KeyProviderCryptoExtension.EncryptedKeyVersion;
 import org.apache.hadoop.fs.BlockLocation;
 import org.apache.hadoop.fs.BlockStorageLocation;
 import org.apache.hadoop.fs.CacheFlag;
@@ -190,6 +189,7 @@ import org.apache.hadoop.hdfs.server.common.HdfsServerConstants;
 import org.apache.hadoop.hdfs.server.datanode.CachingStrategy;
 import org.apache.hadoop.hdfs.server.namenode.NameNode;
 import org.apache.hadoop.hdfs.server.namenode.SafeModeException;
+import org.apache.hadoop.hdfs.server.namenodeFBT.utils.StringUtility;
 import org.apache.hadoop.hdfs.server.protocol.DatanodeStorageReport;
 import org.apache.hadoop.io.DataOutputBuffer;
 import org.apache.hadoop.io.EnumSetWritable;
@@ -2766,6 +2766,69 @@ public class DFSClient implements java.io.Closeable, RemotePeerFactory,
   public String toString() {
     return getClass().getSimpleName() + "[clientName=" + clientName
         + ", ugi=" + ugi + "]"; 
+  }
+
+  public boolean transferNamespace(String targetMachine,
+            String transferBlocksCommandIssueMode,
+            String transferBlockCommand) throws IOException, ClassNotFoundException {
+    return namenode.transferNamespace(targetMachine, transferBlocksCommandIssueMode,
+              transferBlockCommand);
+  }
+  public boolean transferNamespace(String[] targetMachine,
+      String transferBlocksCommandIssueMode,
+      String transferBlockCommand,
+      int currentGear,
+      int nextGear) throws IOException, ClassNotFoundException {
+    return namenode.transferNamespace(targetMachine, transferBlocksCommandIssueMode,
+          transferBlockCommand, currentGear, nextGear);
+  }
+
+  public boolean transferDeferredNamespace(String targetMachine, String owner) {
+    return namenode.transferDeferredNamespace(targetMachine, owner);
+  }
+  public boolean transferNamespace(String targetMachine) {
+    return namenode.transferNamespace(targetMachine);
+  }
+
+  public int setGear(int gear) {
+    return namenode.setGear(gear);
+  }
+  public boolean rangeSearch(String low, String high) {
+    return namenode.rangeSearch(low, high);
+  }
+  public boolean resetOffloading() throws IOException, ClassNotFoundException {
+    return namenode.resetOffloading();
+  }
+  public boolean resetOffloading(String transferBlockMode) throws IOException {
+    return namenode.resetOffloading(transferBlockMode);
+  }
+  public boolean resetOffloading(int currentGear, int nextGear) throws IOException, ClassNotFoundException {
+    StringUtility.debugSpace("DFSClient.resetOffloading "+currentGear+ ", "+nextGear);
+    return namenode.resetOffloading(currentGear, nextGear);
+  }
+
+  public boolean modifyAfterTransfer(String targetMachine) {
+  return namenode.modifyAfterTransfer(targetMachine);
+  }
+  public boolean modifyAfterTransfer(String targetMachine, int currentGear, int nextGear) {
+    return namenode.modifyAfterTransfer(targetMachine, currentGear, nextGear);
+    }
+
+  public boolean resetLoad(String datanodes) {
+  return namenode.resetLoad(datanodes);
+  }
+  public boolean getHitRatio(String datanodes, String dataset) {
+  return namenode.getHitRatio(datanodes, dataset);
+  }
+  public boolean setDeadNodes(String datanodes) {
+    return namenode.setDeadNodes(datanodes);
+  }
+  public int getDatanodeMapSize() {
+    return namenode.getDatanodeMapSize();
+  }
+
+  public int setAccessDelay(boolean delay) {
+    return namenode.setAccessDelay(delay);
   }
 
   public CachingStrategy getDefaultReadCachingStrategy() {

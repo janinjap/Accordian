@@ -844,6 +844,32 @@ public interface ClientProtocol {
   public HdfsFileStatus getFileInfo(String src) throws AccessControlException,
       FileNotFoundException, UnresolvedLinkException, IOException;
   
+  
+  
+  public boolean transferNamespace(String targetMachine,
+      String transferBlocksCommandIssueMode,
+      String transferBlockMode) throws IOException, ClassNotFoundException;
+public boolean transferNamespace(String[] targetMachine,
+    String transferBlocksCommandIssueMode,
+    String transferBlockMode,
+    int currentGear,
+    int nextGear) throws IOException, ClassNotFoundException;
+public boolean transferDeferredNamespace(String targetMachine,
+      String owner);
+public boolean transferNamespace(String targetMachine);
+public boolean modifyAfterTransfer(String targetMachine);
+public boolean modifyAfterTransfer(String targetMachine, int currentGear, int nextGear);
+public boolean resetOffloading() throws IOException;
+public boolean resetOffloading(String transferBlockMode) throws IOException;
+public boolean resetOffloading(int currentGear, int nextGear) throws IOException, ClassNotFoundException;
+public boolean rangeSearch(String low, String high);
+public int setGear(int gear);
+public int setAccessDelay(boolean delay);
+public boolean resetLoad(String datanodes);
+public boolean setDeadNodes(String datanodes);
+public boolean getHitRatio(String datanodes, String dataset);
+public boolean test(String nodesList);
+public int getDatanodeMapSize();
   /**
    * Get the close status of a file
    * @param src The string representation of the path to the file

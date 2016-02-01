@@ -17,9 +17,7 @@
  */
 package org.apache.hadoop.hdfs.server.namenode;
 
-import static org.apache.hadoop.crypto.key.KeyProvider.KeyVersion;
-import static org.apache.hadoop.crypto.key.KeyProviderCryptoExtension
-    .EncryptedKeyVersion;
+import static org.apache.hadoop.crypto.key.KeyProviderCryptoExtension.EncryptedKeyVersion;
 import static org.apache.hadoop.fs.CommonConfigurationKeysPublic.FS_TRASH_INTERVAL_DEFAULT;
 import static org.apache.hadoop.fs.CommonConfigurationKeysPublic.FS_TRASH_INTERVAL_KEY;
 import static org.apache.hadoop.fs.CommonConfigurationKeysPublic.IO_FILE_BUFFER_SIZE_DEFAULT;
@@ -139,6 +137,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.crypto.CipherSuite;
 import org.apache.hadoop.crypto.CryptoCodec;
 import org.apache.hadoop.crypto.key.KeyProvider;
+import org.apache.hadoop.crypto.key.KeyProvider.KeyVersion;
 import org.apache.hadoop.crypto.key.KeyProviderCryptoExtension;
 import org.apache.hadoop.fs.BatchedRemoteIterator.BatchedListEntries;
 import org.apache.hadoop.fs.CacheFlag;
@@ -553,6 +552,7 @@ public class FSNamesystem implements Namesystem, FSClusterStats,
   private final FSImage fsImage;
 
   private boolean randomizeBlockLocationsPerBlock;
+  public transient NetworkTopology clusterMap = new NetworkTopology(); //janin
 
   /**
    * Notify that loading of this FSDirectory is complete, and
@@ -6812,7 +6812,10 @@ public class FSNamesystem implements Namesystem, FSClusterStats,
       }
     }
   }
-
+  
+  public NetworkTopology getClusterMap() {
+    return clusterMap;
+  }
   /**
    * @return all the under-construction files in the lease map
    */
@@ -9018,6 +9021,63 @@ public class FSNamesystem implements Namesystem, FSClusterStats,
       }
       logger.addAppender(asyncAppender);        
     }
+  }
+  /////////////////////janin added
+  public enum CompleteFileStatus {
+    OPERATION_FAILED,
+    STILL_WAITING,
+    COMPLETE_SUCCESS
+  }
+
+  public CompleteFileStatus completeFile(String src, String holder) throws IOException {
+    CompleteFileStatus status = completeFileInternal(src, holder);
+    getEditLog().logSync();
+    return status;
+  }
+  
+  
+  private synchronized CompleteFileStatus completeFileInternal(String src,
+                                                String holder) throws IOException {
+    NameNode.stateChangeLog.info("DIR* NameSystem.completeFile: " + src + " for " + holder);
+    if (isInSafeMode())
+      throw new SafeModeException("Cannot complete file " + src, safeMode);
+    INode iFile = dir.getFileINode(src);
+    INodeFileUnderConstruction pendingFile = null;
+    Block[] fileBlocks = null;
+
+    /*NameNode.LOG.info("iFile "+iFile+" is "+((iFile.isUnderConstruction()==true)?
+                    "under construction":"not under construction"));*/
+
+    if (iFile != null && iFile.isUnderConstruction()) {
+      pendingFile = (INodeFileUnderConstruction) iFile;
+      fileBlocks =  dir.getFileBlocks(src);
+    }
+    if (fileBlocks == null ) {
+      NameNode.stateChangeLog.warn("DIR* NameSystem.completeFile: "
+                                   + "failed to complete " + src
+                                   + " because dir.getFileBlocks() is null " +
+                                   " and pendingFile is " +
+                                   ((pendingFile == null) ? "null" :
+                                     ("from " + pendingFile.getClientMachine()))
+                                  );
+      return CompleteFileStatus.OPERATION_FAILED;
+    } else if (!checkFileProgress(pendingFile, true)) {
+      return CompleteFileStatus.STILL_WAITING;
+    }
+    NameNode.LOG.info("finalize "+src);
+    finalizeINodeFileUnderConstruction(src, pendingFile);
+  //Transfer INode to backUpDirectory at other Node
+  /*if (NameNode.gearManager.getCurrentGear()==2) {
+    String hostName = nameNodeAddress.getHostName();
+      if (!getGearActivateNodes().get(1).contains(hostName)) {
+        send(src,
+          (INode) getINodeFile(src),
+          _backUpMapping.get(hostName)[0]);
+      }
+  }*/
+    NameNode.stateChangeLog.info("DIR* NameSystem.completeFile: file " + src
+                                  + " is closed by " + holder);
+    return CompleteFileStatus.COMPLETE_SUCCESS;
   }
 }
 

@@ -376,8 +376,14 @@ public class DatanodeManager {
           --lastActiveIndex;
       }
       int activeLen = lastActiveIndex + 1;      
-      networktopology.sortByDistance(client, b.getLocations(), activeLen, b
+      networktopology.sortByDistance(client, b.getLocations(), activeLen);
+      
+      
+      //////old one
+      /*
+       *       networktopology.sortByDistance(client, b.getLocations(), activeLen, b
           .getBlock().getBlockId(), randomizeBlockLocationsPerBlock);
+       */
     }
   }
   

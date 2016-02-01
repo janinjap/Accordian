@@ -18,8 +18,7 @@
 package org.apache.hadoop.hdfs.protocolPB;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static org.apache.hadoop.hdfs.protocol.proto.EncryptionZonesProtos
-    .EncryptionZoneWithIdProto;
+import static org.apache.hadoop.hdfs.protocol.proto.EncryptionZonesProtos.EncryptionZoneWithIdProto;
 
 import java.io.EOFException;
 import java.io.IOException;

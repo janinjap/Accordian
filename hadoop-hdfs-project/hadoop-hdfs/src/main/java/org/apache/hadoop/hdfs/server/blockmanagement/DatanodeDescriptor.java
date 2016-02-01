@@ -26,8 +26,11 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import com.google.common.annotations.VisibleForTesting;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.classification.InterfaceAudience;
@@ -56,6 +59,10 @@ public class DatanodeDescriptor extends DatanodeInfo {
   // Stores status of decommissioning.
   // If node is not decommissioning, do not use this object for anything.
   public final DecommissioningStatus decommissioningStatus = new DecommissioningStatus();
+  
+  
+  /** A list of blocks to be replicated by this datanode */
+
   
   /** Block and targets pair */
   @InterfaceAudience.Private
@@ -214,6 +221,26 @@ public class DatanodeDescriptor extends DatanodeInfo {
    */
   private boolean disallowed = false;
 
+  
+  
+  ////////janin
+//add
+  private boolean isWOLTarget = false;
+
+  /**
+   * for rabbit load balancer, log the load (=number of served blocks)
+   * for certain dataset
+   */
+
+  AtomicInteger load=new AtomicInteger(0);
+  Map<String, Integer> dataset2NumBlocks =
+        new ConcurrentHashMap<String, Integer>();
+  AtomicInteger numBlocksWithDatasetID = new AtomicInteger(0);
+  
+  
+  
+  //////////////////////////////////////////////////////////////////
+  //add
   /**
    * DatanodeDescriptor constructor
    * @param nodeID id of the data node
@@ -410,6 +437,11 @@ public class DatanodeDescriptor extends DatanodeInfo {
     assert(block != null && targets != null && targets.length > 0);
     replicateBlocks.offer(new BlockTargetPair(block, targets));
   }
+  /*
+  public void addBlocksTobeReplicated(Block[] blocks, DatanodeDescriptor[][] targets) {
+    assert(blocks != null && targets != null && targets.length > 0);
+    replicateBlocksWOL.offer(blocks, targets);
+  }*/
 
   /**
    * Store block recovery work.

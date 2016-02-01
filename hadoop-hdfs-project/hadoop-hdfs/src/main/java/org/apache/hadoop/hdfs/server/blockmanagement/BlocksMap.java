@@ -33,7 +33,7 @@ import com.google.common.collect.Iterables;
  * block's metadata currently includes blockCollection it belongs to and
  * the datanodes that store the block.
  */
-class BlocksMap {
+public class BlocksMap {
   private static class StorageIterator implements Iterator<DatanodeStorageInfo> {
     private final BlockInfo blockInfo;
     private int nextIdx = 0;

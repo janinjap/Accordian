@@ -72,7 +72,7 @@ public abstract class INode implements INodeAttributes, Diff.Element<byte[]> {
   abstract PermissionStatus getPermissionStatus(int snapshotId);
 
   /** The same as getPermissionStatus(null). */
-  final PermissionStatus getPermissionStatus() {
+  public final PermissionStatus getPermissionStatus() {
     return getPermissionStatus(Snapshot.CURRENT_STATE_ID);
   }
 

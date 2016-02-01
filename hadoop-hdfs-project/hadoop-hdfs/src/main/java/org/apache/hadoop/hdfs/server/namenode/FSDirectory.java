@@ -25,14 +25,17 @@ import static org.apache.hadoop.util.Time.now;
 import java.io.Closeable;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.Map;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import com.google.protobuf.InvalidProtocolBufferException;
+
 import org.apache.hadoop.HadoopIllegalArgumentException;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.conf.Configuration;
@@ -99,6 +102,8 @@ import com.google.common.collect.Lists;
  * @see org.apache.hadoop.hdfs.server.namenode.FSNamesystem
  **/
 @InterfaceAudience.Private
+
+
 public class FSDirectory implements Closeable {
   private static INodeDirectory createRoot(FSNamesystem namesystem) {
     final INodeDirectory r = new INodeDirectory(
@@ -139,7 +144,7 @@ public class FSDirectory implements Closeable {
   private final INodeMap inodeMap; // Synchronized by dirLock
   private long yieldCount = 0; // keep track of lock yield count.
   private final int inodeXAttrsLimit; //inode xattrs max limit
-
+  private Map<Integer, InetSocketAddress> nnAddrs; //janin
   // lock to protect the directory and BlockMap
   private final ReentrantReadWriteLock dirLock;
 
@@ -3072,5 +3077,16 @@ public class FSDirectory implements Closeable {
               "Modification on a read-only snapshot is disallowed");
     }
     return inodesInPath;
+  }
+
+  public INodeFile getFileINode(String src) {
+    synchronized (rootDir) {
+      //INode inode = rootDir.getNode(src);
+      INode inode = rootDir.getNode(src, nnAddrs, false);
+      //NameNode.LOG.info("inode is "+((inode==null)? "null":"not null"));
+      if (inode == null || inode.isDirectory())
+        return null;
+      return (INodeFile)inode;
+    }
   }
 }

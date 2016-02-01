@@ -41,6 +41,7 @@ public class DatanodeID implements Comparable<DatanodeID> {
 
   private String ipAddr;     // IP address
   private String hostName;   // hostname claimed by datanode
+  public String name;      /// hostname:portNumber//janin
   private String peerHostName; // hostname from the actual connection
   private int xferPort;      // data streaming port
   private int infoPort;      // info server port
@@ -222,6 +223,11 @@ public class DatanodeID implements Comparable<DatanodeID> {
   public int getIpcPort() {
     return ipcPort;
   }
+  
+  ///janin
+  public String getName() {
+    return name;
+  }
 
   @Override
   public boolean equals(Object to) {
@@ -268,5 +274,11 @@ public class DatanodeID implements Comparable<DatanodeID> {
   @Override
   public int compareTo(DatanodeID that) {
     return getXferAddr().compareTo(that.getXferAddr());
+  }
+
+  public String getStorageID() {
+    // TODO Auto-generated method stub
+    
+    return "getStorageID";
   }
 }

@@ -81,6 +81,9 @@ import org.apache.hadoop.hdfs.protocol.SnapshottableDirectoryStatus;
 import org.apache.hadoop.hdfs.security.token.block.InvalidBlockTokenException;
 import org.apache.hadoop.hdfs.security.token.delegation.DelegationTokenIdentifier;
 import org.apache.hadoop.hdfs.server.namenode.NameNode;
+import org.apache.hadoop.hdfs.server.namenodeFBT.msg.MessageException;
+import org.apache.hadoop.hdfs.server.namenodeFBT.service.ServiceException;
+import org.apache.hadoop.hdfs.server.namenodeFBT.utils.StringUtility;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.net.NetUtils;
 import org.apache.hadoop.security.AccessControlException;
@@ -89,6 +92,7 @@ import org.apache.hadoop.util.Progressable;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+
 
 
 /****************************************************************
@@ -1247,6 +1251,79 @@ public class DistributedFileSystem extends FileSystem {
         return null;
       }
     }.resolve(this, absF);
+  }
+  
+  public boolean transferNamespace(String targetMachine,
+      String transferBlocksCommandMode,
+      String transferBlockMode) throws IOException, ClassNotFoundException {
+  //StringUtility.debugSpace("DistributedFileSystem.transferNamespace to "+targetMachine);
+  return dfs.transferNamespace(targetMachine,
+      transferBlocksCommandMode, transferBlockMode);
+
+  }
+  public boolean transferNamespace(String[] targetMachine,
+      String transferBlocksCommandMode,
+      String transferBlockMode,
+      int currentGear,
+      int nextGear) throws IOException, ClassNotFoundException {
+  //StringUtility.debugSpace("DistributedFileSystem.transferNamespace to "+targetMachine);
+  return dfs.transferNamespace(targetMachine,
+      transferBlocksCommandMode, transferBlockMode, currentGear, nextGear);
+
+  }
+
+  public boolean transferDeferredNamespace(String targetMachine, String owner) {
+    StringUtility.debugSpace("DistributedFileSystem.transferDeferredNamespace to "
+        +targetMachine);
+    return dfs.transferDeferredNamespace(targetMachine, owner);
+  }
+
+  public int setGear(int gear) {
+    return dfs.setGear(gear);
+  }
+  
+  public int setAccessDelay(boolean delay) {
+    return dfs.setAccessDelay(delay);
+  }
+  public boolean transferNamespace(String targetMachine) {
+    return dfs.transferNamespace(targetMachine);
+  }
+
+  public boolean modifyAfterTransfer (String targetMachine) {
+    return dfs.modifyAfterTransfer(targetMachine);
+  }
+  
+  public boolean modifyAfterTransfer (String targetMachine, int currentGear, int nextGear) {
+    return dfs.modifyAfterTransfer(targetMachine, currentGear, nextGear);
+  }
+  public boolean rangeSearch(String low, String high) {
+    return dfs.rangeSearch(low, high);
+  }
+
+  public boolean resetOffloading() throws IOException, ClassNotFoundException {
+    return dfs.resetOffloading();
+  }
+  public boolean resetOffloading(String transferBlockMode) throws IOException{
+    return dfs.resetOffloading(transferBlockMode);
+  }
+    
+  
+  public boolean resetOffloading(int currentGear, int nextGear) throws IOException, ClassNotFoundException {
+    StringUtility.debugSpace("DFS.resetOffloading "+currentGear+", "+nextGear);
+    return dfs.resetOffloading(currentGear, nextGear);
+  }
+  public boolean resetLoad(String datanodes) {
+    return dfs.resetLoad(datanodes);
+  }
+  public boolean getHitRatio(String datanodes, String dataset) {
+    return dfs.getHitRatio(datanodes, dataset);
+  }
+  public boolean setDeadNodes(String datanodes) {
+    return dfs.setDeadNodes(datanodes);
+  }
+
+  public int getDatanodeMapSize() {
+    return dfs.getDatanodeMapSize();
   }
   
 

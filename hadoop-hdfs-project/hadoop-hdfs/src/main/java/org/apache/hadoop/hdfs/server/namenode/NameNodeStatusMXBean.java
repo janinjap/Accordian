@@ -54,4 +54,5 @@ public interface NameNodeStatusMXBean {
    * @return true, if security is enabled.
    */
   public boolean isSecurityEnabled();
+
 }

@@ -27,8 +27,10 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.HadoopIllegalArgumentException;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Trash;
+import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.ha.HAServiceProtocol.HAServiceState;
 import org.apache.hadoop.ha.HAServiceProtocol.StateChangeRequestInfo;
 import org.apache.hadoop.ha.HAServiceStatus;
@@ -38,16 +40,25 @@ import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.hdfs.DFSUtil;
 import org.apache.hadoop.hdfs.HAUtil;
 import org.apache.hadoop.hdfs.HdfsConfiguration;
+import org.apache.hadoop.hdfs.protocol.Block;
 import org.apache.hadoop.hdfs.protocol.ClientProtocol;
 import org.apache.hadoop.hdfs.protocol.HdfsConstants;
+import org.apache.hadoop.hdfs.server.blockmanagement.BlockInfo;
+import org.apache.hadoop.hdfs.server.blockmanagement.DatanodeDescriptor;
 import org.apache.hadoop.hdfs.server.common.HdfsServerConstants.NamenodeRole;
 import org.apache.hadoop.hdfs.server.common.HdfsServerConstants.RollingUpgradeStartupOption;
 import org.apache.hadoop.hdfs.server.common.HdfsServerConstants.StartupOption;
+import org.apache.hadoop.hdfs.server.gear.GearManager;
 import org.apache.hadoop.hdfs.server.namenode.ha.*;
 import org.apache.hadoop.hdfs.server.namenode.metrics.NameNodeMetrics;
 import org.apache.hadoop.hdfs.server.namenode.startupprogress.StartupProgress;
 import org.apache.hadoop.hdfs.server.namenode.startupprogress.StartupProgressMetrics;
+import org.apache.hadoop.hdfs.server.namenodeFBT.*;
+import org.apache.hadoop.hdfs.server.namenodeFBT.utils.StringUtility;
+import org.apache.hadoop.hdfs.server.namenodeMultiple.*;
+import org.apache.hadoop.hdfs.server.namenodeStaticPartition.*;
 import org.apache.hadoop.hdfs.server.protocol.*;
+import org.apache.hadoop.hdfs.server.namenode.writeOffLoading.*;
 import org.apache.hadoop.ipc.Server;
 import org.apache.hadoop.ipc.StandbyException;
 import org.apache.hadoop.metrics2.lib.DefaultMetricsSystem;
@@ -68,15 +79,18 @@ import org.apache.hadoop.util.StringUtils;
 
 import javax.management.ObjectName;
 
-import java.io.IOException;
-import java.io.PrintStream;
+import java.io.*;
 import java.net.InetSocketAddress;
 import java.net.URI;
 import java.security.PrivilegedExceptionAction;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.net.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Date;
+import java.util.Iterator;
 
 import static org.apache.hadoop.fs.CommonConfigurationKeysPublic.FS_DEFAULT_NAME_KEY;
 import static org.apache.hadoop.fs.CommonConfigurationKeysPublic.FS_TRASH_INTERVAL_DEFAULT;
@@ -237,18 +251,30 @@ public class NameNode implements NameNodeStatusMXBean {
       return NamenodeProtocol.versionID;
     } else if (protocol.equals(RefreshAuthorizationPolicyProtocol.class.getName())){
       return RefreshAuthorizationPolicyProtocol.versionID;
-    } else if (protocol.equals(RefreshUserMappingsProtocol.class.getName())){
+    }else if (protocol.equals(NNClusterProtocol.class.getName())){
+      return NNClusterProtocol.versionID;
+    }else if (protocol.equals(WOLProtocol.class.getName())){
+      return WOLProtocol.versionID;
+    } else if (protocol.equals(TransferMetadataProtocol.class.getName())){
+      return TransferMetadataProtocol.versionID;
+    } else if (protocol.equals(GearProtocol.class.getName())){
+      return GearProtocol.versionID;
+    } 
+    ///////////Below is added afer 0.22
+      else if (protocol.equals(RefreshUserMappingsProtocol.class.getName())){
       return RefreshUserMappingsProtocol.versionID;
     } else if (protocol.equals(RefreshCallQueueProtocol.class.getName())) {
       return RefreshCallQueueProtocol.versionID;
     } else if (protocol.equals(GetUserMappingsProtocol.class.getName())){
       return GetUserMappingsProtocol.versionID;
+      
     } else {
       throw new IOException("Unknown protocol to name node: " + protocol);
     }
   }
     
   public static final int DEFAULT_PORT = 8020;
+  public static final int DEFAULT_TRANSFER_METADATA_PORT = 8025; //new
   public static final Log LOG = LogFactory.getLog(NameNode.class.getName());
   public static final Log stateChangeLog = LogFactory.getLog("org.apache.hadoop.hdfs.StateChange");
   public static final Log blockStateChangeLog = LogFactory.getLog("BlockStateChange");
@@ -262,6 +288,7 @@ public class NameNode implements NameNodeStatusMXBean {
   private final boolean haEnabled;
   private final HAContext haContext;
   protected final boolean allowStaleStandbyReads;
+  protected static InetSocketAddress serverAddress = null;
 
   
   /** httpServer */
@@ -274,7 +301,7 @@ public class NameNode implements NameNodeStatusMXBean {
   /** Activated plug-ins. */
   private List<ServicePlugin> plugins;
   
-  private NameNodeRpcServer rpcServer;
+  private static NameNodeRpcServer rpcServer;
 
   private JvmPauseMonitor pauseMonitor;
   private ObjectName nameNodeStatusBeanName;
@@ -437,6 +464,8 @@ public class NameNode implements NameNodeStatusMXBean {
     return URI.create(HdfsConstants.HDFS_URI_SCHEME + "://" 
         + namenode.getHostName()+portString);
   }
+  
+  
 
   //
   // Common NameNode methods implementation for the active name-node role.
@@ -563,6 +592,19 @@ public class NameNode implements NameNodeStatusMXBean {
         DFS_NAMENODE_KERBEROS_PRINCIPAL_KEY, socAddr.getHostName());
   }
   
+  /////Added by janin
+
+  public static ArrayList<InetSocketAddress> getAddresses(Configuration conf) {
+    String[] nnaddresses = conf.getStrings("fs.namenodeFBTs");
+    ArrayList<InetSocketAddress> nns = new ArrayList<InetSocketAddress>();
+    for (String nnaddress:nnaddresses) {
+      nns.add(new InetSocketAddress(nnaddress, DEFAULT_PORT));
+    }
+  return nns;
+  }
+  ////////////////////////////end
+
+
   /**
    * Initialize name-node.
    * 
@@ -576,6 +618,12 @@ public class NameNode implements NameNodeStatusMXBean {
           intervals);
       }
     }
+  
+    //////////////////janin
+    NameNode.LOG.info("NameNode.initialze()");
+    int handlerCount = conf.getInt("dfs.namenode.handler.count", 50);
+    NameNode.LOG.info("handlerCount,"+handlerCount);
+    //////////////////////////////////////////////////////
 
     UserGroupInformation.setConfiguration(conf);
     loginAsNameNodeUser(conf);
@@ -583,6 +631,17 @@ public class NameNode implements NameNodeStatusMXBean {
     NameNode.initMetrics(conf, this.getRole());
     StartupProgressMetrics.register(startupProgress);
 
+    
+    
+    //////////////janin
+    if (dataPlacementType.equals("Rabbit")) {
+      this.gearManager = new GearManager("conf/gearRabit.xml", "default");
+    } else if(dataPlacementType.equals("Accordion")) {
+      this.gearManager = new GearManager("conf/gearAccordion.xml", "default");
+    } else if (dataPlacementType.equals("Sierra")) {
+      this.gearManager = new GearManager("conf/gearSierra.xml", "default");
+    }
+    /////////////////////////////
     if (NamenodeRole.NAMENODE == role) {
       startHttpServer(conf);
     }
@@ -600,7 +659,7 @@ public class NameNode implements NameNodeStatusMXBean {
     if (NamenodeRole.NAMENODE == role) {
       httpServer.setNameNodeAddress(getNameNodeAddress());
       httpServer.setFSImage(getFSImage());
-    }
+    } 
     
     pauseMonitor = new JvmPauseMonitor(conf);
     pauseMonitor.start();
@@ -737,6 +796,7 @@ public class NameNode implements NameNodeStatusMXBean {
    * @throws IOException
    */
   public NameNode(Configuration conf) throws IOException {
+   
     this(conf, NamenodeRole.NAMENODE);
   }
 
@@ -788,10 +848,14 @@ public class NameNode implements NameNodeStatusMXBean {
    * (Normally, it runs forever.)
    */
   public void join() {
+    NameNode.LOG.info("NameNode.join()");
+
     try {
       rpcServer.join();
     } catch (InterruptedException ie) {
       LOG.info("Caught interrupted exception ", ie);
+      ie.printStackTrace();////janin
+
     }
   }
 
@@ -809,6 +873,7 @@ public class NameNode implements NameNodeStatusMXBean {
         state.exitState(haContext);
       }
     } catch (ServiceFailedException e) {
+      e.printStackTrace();////janin
       LOG.warn("Encountered exception while exiting state ", e);
     } finally {
       stopCommonServices();
@@ -845,7 +910,7 @@ public class NameNode implements NameNodeStatusMXBean {
   /**
    * @return NameNode RPC address
    */
-  public InetSocketAddress getNameNodeAddress() {
+  public static InetSocketAddress getNameNodeAddress() {
     return rpcServer.getRpcAddress();
   }
 
@@ -891,6 +956,18 @@ public class NameNode implements NameNodeStatusMXBean {
    * @return true if formatting was aborted, false otherwise
    * @throws IOException
    */
+  //////////////////////////////////Added by janin
+  public static GearManager gearManager;
+
+  /** Add by hanhlh, to specify what kind of NameNode*/
+  public static String namenodeType;
+  public static String dataPlacementType;
+
+  private int _datanodeNumber;
+  //count number of Block Receive
+  protected AtomicInteger _blockReceivedCount = new AtomicInteger(0);
+
+    ////////////////////////////////end
   private static boolean format(Configuration conf, boolean force,
       boolean isInteractive) throws IOException {
     String nsId = DFSUtil.getNamenodeNameServiceId(conf);
@@ -1345,14 +1422,32 @@ public class NameNode implements NameNodeStatusMXBean {
       StartupOption.METADATAVERSION, fs, null);
   }
 
+  
+  
+  
+  
+  
+  
+  
   public static NameNode createNameNode(String argv[], Configuration conf)
       throws IOException {
+    
+    
+    NameNode namenode = null;//janin
+    try{
+
     LOG.info("createNameNode " + Arrays.asList(argv));
     if (conf == null)
       conf = new HdfsConfiguration();
     // Parse out some generic args into Configuration.
     GenericOptionsParser hParser = new GenericOptionsParser(conf, argv);
     argv = hParser.getRemainingArgs();
+    
+    
+    
+    namenodeType = conf.get("dfs.namenodeType", "default");///janin
+
+    
     // Parse the rest, NN specific args.
     StartupOption startOpt = parseArguments(argv);
     if (startOpt == null) {
@@ -1421,11 +1516,34 @@ public class NameNode implements NameNodeStatusMXBean {
         return null;
       }
       default: {
+        /////////////////janin
+        if (namenodeType.equals("FBT")) {
+          LOG.info("NameNodeFBT");
+          namenode = new NameNodeFBT(conf);
+        } else if (namenodeType.equals("StaticPartition")) {
+          LOG.info("NameNodeStaticPartition");
+          namenode = new NameNodeStaticPartition(conf);
+        }
+        else if (namenodeType.equals("Multiple")) {
+          LOG.info("NameNodeMultiple");
+          namenode = new NameNodeMultiple(conf);
+        }
+        else if (namenodeType.equals("default")){
+          LOG.info("NameNode");
+          namenode = new NameNode(conf);
+        }
+        }
+      }}catch (Exception e) {
+          NameNode.LOG.info("NameNode Exception");
+          e.printStackTrace();
+        }
+        
+        ////////////////////////////////
         DefaultMetricsSystem.initialize("NameNode");
         return new NameNode(conf);
-      }
+      
     }
-  }
+ 
 
   /**
    * In federation configuration is set for a set of
@@ -1497,6 +1615,242 @@ public class NameNode implements NameNodeStatusMXBean {
       terminate(1, e);
     }
   }
+  ////////////////////////////////////////////////lots of janin now
+  public boolean synchronizeRootNodes() throws IOException {
+    return false;
+  }
+/* must be here somewhere
+  public boolean mkdirs(String src, FsPermission masked , boolean isDirectory)
+      throws IOException {
+    return mkdirs(src, masked);
+  }
+
+  public FileStatus getFileInfo(String src, boolean isDirectory)
+      throws IOException {
+    return getFileInfo(src);
+  }
+*/
+  //NNClusterProtocol //
+  public NNClusterProtocol nnNamenode;
+
+  //WOLProtocol
+  public WOLProtocol wolProtocol;
+  public boolean transferNamespace(String[] targetMachine,
+      String transferBlocksCommandIssueMode,
+      String transferBlockMode,
+      int currentGear,
+      int nextGear) throws IOException, ClassNotFoundException {
+        LOG.info("NameNode.transferNamespace to "+targetMachine.toString());
+         return resetOffloading(currentGear,nextGear);
+  }
+  public boolean transferDeferredNamespace(String targetMachine,
+  String onwner) {
+    LOG.info("NameNode.transferDeferredNamespace to "+targetMachine);
+    return false;
+  }
+  
+  public boolean resetOffloading(String transferBlockMode) throws IOException {
+    return false;
+  }
+  
+  public boolean resetOffloading() throws IOException {
+    return resetOffloading(WriteOffLoading.writeOffLoadingFile.concat("."
+    +serverAddress.getHostName()), 0, -1);
+  }
+
+  public boolean resetOffloading(int currentGear, int nextGear) throws IOException {
+    StringUtility.debugSpace("NameNode.resetOffloading "+currentGear+" to "+nextGear);
+    return resetOffloading(WriteOffLoading.writeOffLoadingFile.concat("."
+    +serverAddress.getHostName()), currentGear, nextGear);
+  }
+
+  private boolean resetOffloading(String logFile, int currentGear, int nextGear) throws IOException {
+    NameNode.LOG.info("NameNode.resetOffloading to gear "+nextGear);
+    boolean result = false;
+      try {
+         ArrayList<String> activateNodesAtNextGear=gearManager.getActivateNodes(nextGear);
+         ArrayList<String> activateNodesAtCurrentGear = gearManager.getActivateNodes(currentGear);
+         ArrayList<String> reactivatedNodes = new ArrayList<String>();
+         for (String node:activateNodesAtNextGear) {
+           if (!activateNodesAtCurrentGear.contains(node))
+             reactivatedNodes.add(node);
+         }
+         System.out.println("reactivatedNodes at gear "+nextGear+": "+reactivatedNodes.toString());
+         Date start= new Date();
+
+         File file = null;
+         FileInputStream fis = null;
+         DataInputStream dis = null;
+         BufferedReader br = null;
+         String line = null;
+         //PrintWriter pw = null;
+         //NameNode.LOG.info("FSNamesystem.reOffloading offset "+getOffset());
+
+         file = new File(logFile);
+         if (!file.exists())
+           if (!file.canRead()) System.out.println("cannot open" +
+          logFile);
+
+         fis = new FileInputStream(file);
+         dis = new DataInputStream(fis); 
+         br = new BufferedReader(new InputStreamReader(dis));
+         int lineCount=0;
+         while ((line = br.readLine())!=null) {
+           String[] record = line.split(",");
+           String src = record[2];
+           String wolDst = record[3];  //IPAddress 192.168.0.114
+           String dst = record[4];
+           if (reactivatedNodes.contains(dst)) {
+             System.out.println("transfer temp data to "+dst);
+             Date startSearchBlock = new Date();
+             Block[] block = new Block[1];
+             for(BlockInfo bi : namesystem.getBlocksMap().getBlocks()) {
+               if (bi.getBlockName().equals(src)) {
+                 System.out.println("found "+bi.getBlockName());
+                 block[0] = bi;
+                 break;
+               }
+             }
+//Block[] block = namesystem.getINodeFile(src).getBlocks();
+             NameNode.LOG.info("searchBlock,"+ (new Date().getTime()-startSearchBlock.getTime())/1000.0);
+             ArrayList<Block[]> blocks = new ArrayList<Block[]>();
+             blocks.add(block);
+             lineCount++;
+             writeOffLoadingCommandHandler(new WriteOffLoadingCommand(blocks, dst, wolDst));
+           } else {
+             System.out.println("pass transfer temp data to "+dst);
+           }
+         }
+
+         dis.close();
+         result = true;
+         NameNode.LOG.info("NameNodeFBT.resetOffLoading,"+(new Date().getTime()-start.getTime())/1000.0);
+
+      } catch (IOException e) {
+        e.printStackTrace();
+      } catch (Exception e) {
+        e.printStackTrace();
+      }
+/*boolean backUp = copy(WriteOffLoading.writeOffLoadingFile,
+    WriteOffLoading.writeOffLoadingBackUp.concat(
+        String.format("%s.%d.log", "WriteOffLoading",
+new Date().getTime())));
+if (backUp) {
+deleteLogFile(WriteOffLoading.writeOffLoadingFile);
+}*/
+//modifyAfterTransfer(targetMachine);
+
+      return result;
+
+  }
+
+
+  public void writeOffLoadingCommandHandler(WriteOffLoadingCommand command) {
+    //NameNode.LOG.info("NameNode.writeOffLoadingCommandHandler");
+    Date start=new Date();  
+    DatanodeDescriptor WOLSrc = ((DatanodeDescriptor) namesystem.clusterMap.getNode(
+        "/default-rack/192.168.0."+
+            (100+Integer.parseInt(
+                command.getWOLDestination().substring(3)))+
+        ":50010"));
+    String dstStr = normalizedDstHostName(command.getDestination());
+//System.out.println("dstStr,"+dstStr);
+    DatanodeDescriptor dst = ((DatanodeDescriptor)
+        namesystem.getClusterMap().getNode(
+            "/default-rack/192.168.0."+(100+Integer.parseInt(dstStr.substring(3)))+
+            ":50010"));
+    for (Block[]bs : command.getBlocks()) {
+      for (Block b:bs) {
+        NameNode.LOG.info("reoffload: "+b);
+        WOLSrc.addBlockToBeReplicated(b, new DatanodeDescriptor[] {dst});
+//ArrayList<Block> invalidateList = new ArrayList<Block>();
+//invalidateList.add(b);
+//WOLSrc.addBlocksToBeInvalidated(invalidateList);
+        dst.updateDataset2NumBlocks("/benchmarks/TestDFSIO/io_data", 1);
+      }
+    }
+
+//NameNode.LOG.info("WOLCHandler,"+(new Date().getTime()-start.getTime())/1000.0);
+}
+/**
+* edn9  --> edn09
+* edn10 --> edn10
+* */
+  protected String normalizedDstHostName(String dstName) {
+    return dstName = (dstName.length()==4) ? (dstName.substring(0, 3).concat("0").concat(
+                dstName.substring(3, 4)))
+            : dstName;
+  } 
+////////////// 
+  /*
+  @Override
+  public boolean rangeSearch(String low, String high) {
+//    
+    return false;
+  }
+
+  @Override
+  public boolean modifyAfterTransfer(String targetMachine) {
+  //    
+  return true;
+  }
+
+  @Override
+  public boolean transferNamespace(String targetMachine) {
+  return false;
+  }
+  
+  */
+   /////////////////////
+  //@Override
+  public int setGear(int gear) {
+    StringUtility.debugSpace("setGear, "+gear);
+    return gearManager.setCurrentGear(gear);
+  }
+
+/** {@inheritDoc} */
+  @Override
+  public boolean resetLoad(String datanodes) {
+    return namesystem.resetLoad(datanodes);
+  }
+  public boolean setDeadNodes(String datanodes) {
+    return namesystem.setDeadNodes(datanodes);
+  }
+
+  public boolean getHitRatio(String datanodes, String dataset) {
+    return namesystem.getHitRatio(datanodes, dataset);
+  }
+  public boolean test(String nodesList) {
+    System.out.println("NameNode.test, "+nodesList);
+  return true;
+  }
+  public int getDatanodeMapSize() {
+    return namesystem.getDatanodeMap().size();
+  }
+
+  @Override
+  public boolean transferNamespace(String targetMachine,
+    String transferBlocksCommandIssueMode, String transferBlockMode)
+        throws IOException, ClassNotFoundException {
+  // TODO Auto-generated method stub
+  return false;
+  }
+
+  @Override
+  public boolean modifyAfterTransfer(String targetMachine, int currentGear,
+    int nextGear) {
+  // TODO Auto-generated method stub
+  return false;
+  }
+
+  @Override
+  public int setAccessDelay(boolean delay) {
+    // TODO Auto-generated method stub
+    return 0;
+  }
+
+  
+////////////////////////////////////////////////// ends here
 
   synchronized void monitorHealth() 
       throws HealthCheckFailedException, AccessControlException {

@@ -19,6 +19,7 @@ package org.apache.hadoop.hdfs.server.namenode;
 
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
+import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
@@ -876,5 +877,44 @@ public class INodeDirectory extends INodeWithAdditionalFields
 
   public final int getChildrenNum(final int snapshotId) {
     return getChildrenList(snapshotId).size();
+  }
+
+  private INode getNode(byte[][] components) {
+    INode[] inode  = new INode[1];
+    getExistingPathINodes(components, inode);
+    return inode[0];
+  }
+
+  public int getExistingPathINodes(byte[][] components, INode[] existing) {
+    assert compareBytes(this.name, components[0]) == 0 :
+      "Incorrect name " + getLocalName() + " expected " + components[0];
+
+    INode curNode = this;
+    int count = 0;
+    int index = existing.length - components.length;
+    if (index > 0)
+      index = 0;
+    while ((count < components.length) && (curNode != null)) {
+      if (index >= 0)
+        existing[index] = curNode;
+      if (!curNode.isDirectory() || (count == components.length - 1))
+        break; // no more child, stop here
+      INodeDirectory parentDir = (INodeDirectory)curNode;
+      curNode = parentDir.getChildINode(components[count + 1]);
+      count += 1;
+      index += 1;
+    }
+    return count;
+  }
+
+  private INode getChildINode(byte[] name) {
+    if (children == null) {
+      return null;
+    }
+    int low = Collections.binarySearch(children, name);
+    if (low >= 0) {
+      return children.get(low);
+    }
+    return null;
   }
 }

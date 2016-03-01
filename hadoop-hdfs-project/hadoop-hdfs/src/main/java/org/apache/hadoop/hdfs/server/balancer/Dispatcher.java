@@ -1020,7 +1020,8 @@ public class Dispatcher {
       Set<String> nodes = new HashSet<String>();
       try {
         HostsFileReader.readFileToSet(type, fileName, nodes);
-        return StringUtils.getTrimmedStrings(nodes);
+        //return StringUtils.getTrimmedStrings(nodes); //janin deleted this, why getTrimmedStrings?
+        return nodes;
       } catch (IOException e) {
         throw new IllegalArgumentException(
             "Failed to read host list from file: " + fileName);

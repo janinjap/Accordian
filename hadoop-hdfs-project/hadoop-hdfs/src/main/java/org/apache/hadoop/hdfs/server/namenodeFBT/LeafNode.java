@@ -259,8 +259,7 @@ public class LeafNode extends AbstractNode implements Serializable{
 				System.out.println(getNodeNameID()+"***key["+i+"]: "+_keys.get(i));
 			}
 */			int pos = this.binaryLocate(key);
-			inode.setLocalName(key.substring(
-									key.lastIndexOf("/")+1));
+			inode.setLocalName((key.substring(key.lastIndexOf("/")+1)).getBytes()); //janin convert string to getbyte
 			_keys.set(pos-1, key);
 			_iNodes.set(pos-1, inode);
 			_shouldTransfer.set(pos-1, false);

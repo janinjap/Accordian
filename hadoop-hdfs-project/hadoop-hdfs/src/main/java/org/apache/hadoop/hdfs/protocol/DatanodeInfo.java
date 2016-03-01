@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 package org.apache.hadoop.hdfs.protocol;
-
+//new
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceStability;
 import org.apache.hadoop.hdfs.DFSConfigKeys;

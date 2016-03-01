@@ -629,8 +629,8 @@ public class FBTInsertModifyMarkOptVisitor extends FBTModifyMarkOptVisitor{
         		      }
         		      inode.setPermission(p);
         		}
-
-        		inode.setLocalName(_key);
+        		byte[] newkey = _key.getBytes();///this bug is 
+        		inode.setLocalName(newkey);////
         		inode.setModificationTime(inode.getModificationTime());
         		if (inode.getGroupName() == null) {
         			inode.setGroup(inode.getGroupName());

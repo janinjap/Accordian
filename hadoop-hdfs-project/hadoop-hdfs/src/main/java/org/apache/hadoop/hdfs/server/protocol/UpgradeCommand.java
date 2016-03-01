@@ -70,7 +70,7 @@ public class UpgradeCommand extends DatanodeCommand {
     WritableFactories.setFactory
       (UpgradeCommand.class,
        new WritableFactory() {
-         public Writable newInstance() { return new UpgradeCommand(); }
+         public Writable newInstance() { return (Writable) new UpgradeCommand(); }
        });
   }
 

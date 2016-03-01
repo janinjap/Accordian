@@ -168,7 +168,7 @@ public class ShortCircuitRegistry {
       if (dswLoadingFailure != null) {
         throw new IOException(dswLoadingFailure);
       }
-      watcher = new DomainSocketWatcher(interruptCheck);
+      watcher = new DomainSocketWatcher(interruptCheck,null); //add null to original DSW(interruptCheck)
       enabled = true;
       if (LOG.isDebugEnabled()) {
         LOG.debug("created new ShortCircuitRegistry with interruptCheck=" +

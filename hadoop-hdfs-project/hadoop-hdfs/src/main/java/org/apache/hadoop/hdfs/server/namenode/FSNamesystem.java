@@ -329,6 +329,7 @@ public class FSNamesystem implements Namesystem, FSClusterStats,
         return new StringBuilder();
       }
   };
+  public static transient ReplicationTargetChooser replicator; //janin added from old FSNamesystem
 
   @VisibleForTesting
   public boolean isAuditEnabled() {
@@ -1640,7 +1641,7 @@ public class FSNamesystem implements Namesystem, FSClusterStats,
     return accessTimePrecision;
   }
 
-  private boolean isAccessTimeSupported() {
+  public boolean isAccessTimeSupported() {
     return accessTimePrecision > 0;
   }
 

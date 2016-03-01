@@ -20,6 +20,7 @@ package org.apache.hadoop.hdfs.server.namenode;
 import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.logging.Log;
@@ -821,4 +822,17 @@ public abstract class INode implements INodeAttributes, Diff.Element<byte[]> {
    */
   public interface Feature {
   }
+
+  public boolean isUnderConstruction() { //janin added this from old INode
+    return false;
+  }
+
+  public String getPathName() { //janin added this from old INode
+    return pathName;
+  }
+
+  public abstract int collectSubtreeBlocksAndClear(List<Block> v);
+
+
+
 }

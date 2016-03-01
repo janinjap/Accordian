@@ -1470,5 +1470,113 @@ class NameNodeRpcServer implements NamenodeProtocols {
   public void checkAccess(String path, FsAction mode) throws IOException {
     namesystem.checkAccess(path, mode);
   }
+
+  @Override
+  public boolean transferNamespace(String targetMachine,
+      String transferBlocksCommandIssueMode, String transferBlockMode)
+      throws IOException, ClassNotFoundException {
+    // TODO Auto-generated method stub
+    return false;
+  }
+
+  @Override
+  public boolean transferNamespace(String[] targetMachine,
+      String transferBlocksCommandIssueMode, String transferBlockMode,
+      int currentGear, int nextGear) throws IOException, ClassNotFoundException {
+    // TODO Auto-generated method stub
+    return false;
+  }
+
+  @Override
+  public boolean transferDeferredNamespace(String targetMachine, String owner) {
+    // TODO Auto-generated method stub
+    return false;
+  }
+
+  @Override
+  public boolean transferNamespace(String targetMachine) {
+    // TODO Auto-generated method stub
+    return false;
+  }
+
+  @Override
+  public boolean modifyAfterTransfer(String targetMachine) {
+    // TODO Auto-generated method stub
+    return false;
+  }
+
+  @Override
+  public boolean modifyAfterTransfer(String targetMachine, int currentGear,
+      int nextGear) {
+    // TODO Auto-generated method stub
+    return false;
+  }
+
+  @Override
+  public boolean resetOffloading() throws IOException {
+    // TODO Auto-generated method stub
+    return false;
+  }
+
+  @Override
+  public boolean resetOffloading(String transferBlockMode) throws IOException {
+    // TODO Auto-generated method stub
+    return false;
+  }
+
+  @Override
+  public boolean resetOffloading(int currentGear, int nextGear)
+      throws IOException, ClassNotFoundException {
+    // TODO Auto-generated method stub
+    return false;
+  }
+
+  @Override
+  public boolean rangeSearch(String low, String high) {
+    // TODO Auto-generated method stub
+    return false;
+  }
+
+  @Override
+  public int setGear(int gear) {
+    // TODO Auto-generated method stub
+    return 0;
+  }
+
+  @Override
+  public int setAccessDelay(boolean delay) {
+    // TODO Auto-generated method stub
+    return 0;
+  }
+
+  @Override
+  public boolean resetLoad(String datanodes) {
+    // TODO Auto-generated method stub
+    return false;
+  }
+
+  @Override
+  public boolean setDeadNodes(String datanodes) {
+    // TODO Auto-generated method stub
+    return false;
+  }
+
+  @Override
+  public boolean getHitRatio(String datanodes, String dataset) {
+    // TODO Auto-generated method stub
+    return false;
+  }
+
+  @Override
+  public boolean test(String nodesList) {
+    // TODO Auto-generated method stub
+    return false;
+  }
+
+  @Override
+  public int getDatanodeMapSize() {
+    // TODO Auto-generated method stub
+    return 0;
+  }
 }
 

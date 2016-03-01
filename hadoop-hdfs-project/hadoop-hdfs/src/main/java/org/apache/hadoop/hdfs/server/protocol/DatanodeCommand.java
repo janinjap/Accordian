@@ -17,6 +17,8 @@
  */
 package org.apache.hadoop.hdfs.server.protocol;
 
+import java.io.IOException;
+
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceStability;
 
@@ -30,5 +32,8 @@ public abstract class DatanodeCommand extends ServerCommand {
 
   DatanodeCommand(int action) {
     super(action);
+  }
+  public void write(DataOutput out) throws IOException {
+    out.writeInt(this.action);
   }
 }

@@ -8,7 +8,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.hadoop.hdfs.protocol.QuotaExceededException;
-import org.apache.hadoop.hdfs.server.namenode.BlocksMap;
+//import org.apache.hadoop.hdfs.server.namenode.BlocksMap;
+import org.apache.hadoop.hdfs.server.blockmanagement.*;
 import org.apache.hadoop.hdfs.server.namenode.NameNode;
 import org.apache.hadoop.hdfs.server.namenode.NotReplicatedYetException;
 import org.apache.hadoop.hdfs.server.namenodeFBT.msg.MessageException;

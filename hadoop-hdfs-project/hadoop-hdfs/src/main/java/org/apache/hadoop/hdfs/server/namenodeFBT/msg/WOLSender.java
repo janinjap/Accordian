@@ -22,7 +22,8 @@ import org.apache.hadoop.hdfs.server.namenodeFBT.Node;
 import org.apache.hadoop.hdfs.server.namenodeFBT.Request;
 import org.apache.hadoop.hdfs.server.namenodeFBT.msg.Sender.OutputConnection;
 import org.apache.hadoop.hdfs.server.namenodeFBT.utils.StringUtility;
-import org.apache.hadoop.hdfs.server.namenode.BlocksMap;
+//import org.apache.hadoop.hdfs.server.namenode.BlocksMap;
+import org.apache.hadoop.hdfs.server.blockmanagement.*;
 import org.apache.hadoop.hdfs.server.namenode.INode;
 /**
  * @author hanhlh

@@ -11,7 +11,8 @@ import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.fs.permission.PermissionStatus;
 import org.apache.hadoop.hdfs.protocol.Block;
 import org.apache.hadoop.hdfs.server.namenode.DatanodeDescriptor;
-import org.apache.hadoop.hdfs.server.namenode.BlocksMap.BlockInfo;
+import org.apache.hadoop.hdfs.server.blockmanagement.*;
+//import org.apache.hadoop.hdfs.server.namenode.BlocksMap.BlockInfo;
 import org.apache.hadoop.hdfs.server.namenodeFBT.INodeFileUnderConstruction;
 import org.apache.hadoop.hdfs.server.namenodeFBT.utils.StringUtility;
 /**

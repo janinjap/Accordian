@@ -228,6 +228,7 @@ public class BlockInfo extends Block implements LightWeightGSet.LinkedElement {
    * Find specified DatanodeDescriptor.
    * @return index or -1 if not found.
    */
+  /* this one is old
   boolean findDatanode(DatanodeDescriptor dn) {
     int len = getCapacity();
     for(int idx = 0; idx < len; idx++) {
@@ -240,6 +241,19 @@ public class BlockInfo extends Block implements LightWeightGSet.LinkedElement {
       }
     }
     return false;
+  }
+  */
+  //below this findDatanode is new 
+  int findDatanode(DatanodeDescriptor dn) {
+    int len = getCapacity();
+    for(int idx = 0; idx < len; idx++) {
+      DatanodeDescriptor cur = getDatanode(idx);
+      if(cur == dn)
+        return idx;
+      if(cur == null)
+        break;
+    }
+    return -1;
   }
   /**
    * Find specified DatanodeStorageInfo.
@@ -396,5 +410,22 @@ public class BlockInfo extends Block implements LightWeightGSet.LinkedElement {
   @Override
   public void setNext(LightWeightGSet.LinkedElement next) {
     this.nextLinkedElement = next;
+  }
+
+  boolean addNode(DatanodeDescriptor node) {
+    if(findDatanode(node) >= 0) // the node is already there
+      return false;
+    // find the last null node
+    int lastNode = ensureCapacity(1);
+    setDatanode(lastNode, node);
+    setNext(lastNode, null);
+    setPrevious(lastNode, null);
+    return true;
+  }
+///Janin added setDataNode from old acc BlocksMap
+  void setDatanode(int index, DatanodeDescriptor node) {
+    assert this.triplets != null : "BlocksMap is not initialized";
+    assert index >= 0 && index*3 < triplets.length : "Index is out of bound";
+    triplets[index*3] = node;
   }
 }

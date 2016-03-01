@@ -189,6 +189,7 @@ public abstract class INodeWithAdditionalFields extends INode
   }
 
   @Override
+  public //janin added
   final void setGroup(String group) {
     int n = SerialNumberManager.INSTANCE.getGroupSerialNumber(group);
     updatePermissionStatus(PermissionStatusFormat.GROUP, n);

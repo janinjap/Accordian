@@ -9,7 +9,8 @@ import java.util.List;
 import org.apache.hadoop.hdfs.protocol.Block;
 import org.apache.hadoop.hdfs.protocol.DatanodeInfo;
 import org.apache.hadoop.hdfs.protocol.LocatedBlock;
-import org.apache.hadoop.hdfs.server.namenode.DatanodeDescriptor;
+import org.apache.hadoop.hdfs.protocol.LocatedBlocks;
+import org.apache.hadoop.hdfs.server.blockmanagement.DatanodeDescriptor;
 import org.apache.hadoop.hdfs.server.namenode.FSNamesystem;
 import org.apache.hadoop.hdfs.server.namenode.INode;
 import org.apache.hadoop.hdfs.server.namenode.INodeFile;
@@ -18,7 +19,8 @@ import org.apache.hadoop.hdfs.server.namenode.NameNode;
 import org.apache.hadoop.hdfs.server.namenode.NotReplicatedYetException;
 import org.apache.hadoop.hdfs.server.namenode.ReplicationTargetChooser;
 import org.apache.hadoop.hdfs.server.namenode.ReplicationTargetChooserAccordion;
-import org.apache.hadoop.hdfs.server.namenode.BlocksMap.BlockInfo;
+//import org.apache.hadoop.hdfs.server.namenode.BlocksMap.BlockInfo;
+import org.apache.hadoop.hdfs.server.blockmanagement.*;
 import org.apache.hadoop.hdfs.server.namenodeFBT.lock.Lock;
 import org.apache.hadoop.hdfs.server.namenodeFBT.msg.MessageException;
 import org.apache.hadoop.hdfs.server.namenodeFBT.rule.GetAdditionalBlockRequest;
@@ -297,7 +299,7 @@ public class FBTGetAdditionalBlockNoCouplingVisitor extends FBTNodeVisitor {
 	            	}
 
 	            	// Create next block
-	            	LocatedBlock lb = new LocatedBlock(newBlock, targets, fileLength);
+	            	LocatedBlock lb = new LocatedBlock(newBlock, targets, fileLength); //Extendedblocks vs Block
 	            	endLock(self);
 	            	_response = new GetAdditionalBlockResponse(
                           (GetAdditionalBlockRequest) _request, self, _key, lb, _directory.getOwner());

@@ -1861,7 +1861,7 @@ public class DFSOutputStream extends FSOutputSummer
         long saveOffset = bytesCurBlock;
         Packet oldCurrentPacket = currentPacket;
         // flush checksum buffer, but keep checksum buffer intact
-        flushBuffer(true);
+        flushBuffer(true); //should change flushBuffer(true) to () or (bool,bool)
         // bytesCurBlock potentially incremented if there was buffered data
 
         if (DFSClient.LOG.isDebugEnabled()) {

@@ -60,7 +60,7 @@ public class Forwards  extends Thread{
     this.src = src;
     this.offsetBsizeUsed = offset;
     this.lengcap = length;
-    protocol = node;
+    protocol = (VersionedProtocol) node; //added cast by janin
   }
 
   public Forwards(String src, FsPermission masked, String clientName,
@@ -72,7 +72,7 @@ public class Forwards  extends Thread{
     this.overwrite = overwrite;
     this.replication = replication;
     this.offsetBsizeUsed = blockSize;
-    protocol = node;
+    protocol = (VersionedProtocol) node; //added cast by Janin
   }
 
   public Forwards(DatanodeRegistration nodeReg, long[] blocks, NNClusterProtocol node, int method) {

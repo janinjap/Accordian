@@ -440,7 +440,7 @@ public class DataNode extends Configured
       } else {
         // The http socket is created externally using JSVC, we add it in
         // directly.
-        builder.setConnector(secureResources.getListener());
+        builder.setConnector(secureResources.getListener()); //cannot change HttpServer2.builder
       }
     }
 
@@ -855,7 +855,8 @@ public class DataNode extends Configured
     registerMXBean();
     initDataXceiver(conf);
     startInfoServer(conf);
-    pauseMonitor = new JvmPauseMonitor(conf);
+    pauseMonitor = new JvmPauseMonitor(); //change frome JvmPauseMonitor(conf) to new and init
+    pauseMonitor.init(conf);
     pauseMonitor.start();
   
     // BlockPoolTokenSecretManager is required to create ipc server.

@@ -7,8 +7,8 @@ import java.io.IOException;
 
 import org.apache.hadoop.fs.permission.PermissionStatus;
 import org.apache.hadoop.hdfs.server.namenode.DatanodeDescriptor;
-import org.apache.hadoop.hdfs.server.namenode.BlocksMap.BlockInfo;
-
+//import org.apache.hadoop.hdfs.server.namenode.BlocksMap.BlockInfo;
+import org.apache.hadoop.hdfs.server.blockmanagement.*;
 /**
  * @author hanhlh
  *

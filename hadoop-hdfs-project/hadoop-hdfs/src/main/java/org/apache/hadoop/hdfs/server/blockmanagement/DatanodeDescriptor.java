@@ -718,5 +718,14 @@ public class DatanodeDescriptor extends DatanodeInfo {
     }
     return true;
  }
+
+  public synchronized void updateDataset2NumBlocks(String datasetID, int delta) {
+    int addedBlock = numBlocksWithDatasetID.addAndGet(delta);
+    System.out.println("updateDataset2NumBlocks,"+getHostName()+","+datasetID+","+addedBlock);
+    dataset2NumBlocks.put(datasetID, addedBlock);
+  }
+  public void incBlocksScheduled() {
+    currApproxBlocksScheduled++;
+  }
 }
 

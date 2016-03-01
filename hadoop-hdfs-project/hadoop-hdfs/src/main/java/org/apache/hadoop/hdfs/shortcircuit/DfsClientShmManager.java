@@ -412,7 +412,7 @@ public class DfsClientShmManager implements Closeable {
   private final DomainSocketWatcher domainSocketWatcher;
   
   DfsClientShmManager(int interruptCheckPeriodMs) throws IOException {
-    this.domainSocketWatcher = new DomainSocketWatcher(interruptCheckPeriodMs);
+    this.domainSocketWatcher = new DomainSocketWatcher(interruptCheckPeriodMs,null); //null added by janin
   }
   
   public Slot allocSlot(DatanodeInfo datanode, DomainPeer peer,

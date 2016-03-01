@@ -4,7 +4,7 @@
 package org.apache.hadoop.hdfs.server.namenodeFBT.rule;
 
 import org.apache.hadoop.fs.permission.PermissionStatus;
-import org.apache.hadoop.hdfs.server.namenode.DatanodeDescriptor;
+import org.apache.hadoop.hdfs.server.blockmanagement.DatanodeDescriptor;
 import org.apache.hadoop.hdfs.server.namenodeFBT.VPointer;
 import org.apache.hadoop.hdfs.server.namenode.INode;
 

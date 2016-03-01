@@ -18,6 +18,7 @@
 package org.apache.hadoop.hdfs.server.blockmanagement;
 
 import java.util.Iterator;
+import java.util.Map;
 
 import org.apache.hadoop.hdfs.protocol.Block;
 import org.apache.hadoop.hdfs.server.protocol.DatanodeStorage;
@@ -230,4 +231,5 @@ public class BlocksMap {
     blocks.put(newBlock);
     return newBlock;
   }
+
 }

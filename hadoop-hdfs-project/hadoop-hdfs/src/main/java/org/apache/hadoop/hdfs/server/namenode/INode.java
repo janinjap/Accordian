@@ -36,6 +36,7 @@ import org.apache.hadoop.hdfs.protocol.QuotaExceededException;
 import org.apache.hadoop.hdfs.server.namenode.INodeReference.DstReference;
 import org.apache.hadoop.hdfs.server.namenode.INodeReference.WithName;
 import org.apache.hadoop.hdfs.server.namenode.snapshot.Snapshot;
+import org.apache.hadoop.hdfs.server.namenodeFBT.FBTDirectory;
 import org.apache.hadoop.hdfs.util.ChunkedArrayList;
 import org.apache.hadoop.hdfs.util.Diff;
 import org.apache.hadoop.util.StringUtils;
@@ -829,6 +830,26 @@ public abstract class INode implements INodeAttributes, Diff.Element<byte[]> {
 
   public String getPathName() { //janin added this from old INode
     return pathName;
+  }
+  
+  //janin
+  public static String[] getParentAndCurrentPathNames(String path) {
+    int count=2; //starts from /user/hanhlh
+    if (path == null || !path.startsWith(FBTDirectory.DEFAULT_ROOT_DIRECTORY)) {
+      System.out.println("invalid path");
+      return null;
+    }
+    String[] names = getPathNames(path);
+    //System.out.println("name length "+names.length);
+    String[] parents = new String[names.length-2];
+    for (;count<names.length; count++) {
+      String pathBuilder = "";
+      for (int temp = 1; temp<count+1; temp++) {
+        pathBuilder = pathBuilder.concat(Path.SEPARATOR).concat(names[temp]);
+      }
+      parents[count-2] = pathBuilder;
+    }
+    return parents;
   }
 
   public abstract int collectSubtreeBlocksAndClear(List<Block> v);

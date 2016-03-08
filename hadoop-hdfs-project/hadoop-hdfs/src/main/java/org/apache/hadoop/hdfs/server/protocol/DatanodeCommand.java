@@ -17,6 +17,7 @@
  */
 package org.apache.hadoop.hdfs.server.protocol;
 
+import java.io.DataOutput;
 import java.io.IOException;
 
 import org.apache.hadoop.classification.InterfaceAudience;

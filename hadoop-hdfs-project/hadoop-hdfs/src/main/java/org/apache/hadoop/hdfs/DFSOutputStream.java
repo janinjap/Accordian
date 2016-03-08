@@ -1861,7 +1861,7 @@ public class DFSOutputStream extends FSOutputSummer
         long saveOffset = bytesCurBlock;
         Packet oldCurrentPacket = currentPacket;
         // flush checksum buffer, but keep checksum buffer intact
-        flushBuffer(true); //should change flushBuffer(true) to () or (bool,bool)
+        flushBuffer(); //should change flushBuffer(true) to () or (bool,bool)
         // bytesCurBlock potentially incremented if there was buffered data
 
         if (DFSClient.LOG.isDebugEnabled()) {
@@ -2220,5 +2220,12 @@ public class DFSOutputStream extends FSOutputSummer
   private static <T> void arraycopy(T[] srcs, T[] dsts, int skipIndex) {
     System.arraycopy(srcs, 0, dsts, 0, skipIndex);
     System.arraycopy(srcs, skipIndex+1, dsts, skipIndex, dsts.length-skipIndex);
+  }
+
+  @Override
+  protected void writeChunk(byte[] b, int bOffset, int bLen, byte[] checksum, //auto gen by janin
+      int checksumOffset, int checksumLen) throws IOException {
+    // TODO Auto-generated method stub
+    
   }
 }

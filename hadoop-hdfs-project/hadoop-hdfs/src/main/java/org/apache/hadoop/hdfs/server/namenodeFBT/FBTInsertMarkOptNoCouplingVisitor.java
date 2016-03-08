@@ -20,7 +20,7 @@ import org.apache.hadoop.hdfs.server.namenodeFBT.rule.FBTInsertModifyMarkOptResp
 import org.apache.hadoop.hdfs.server.namenodeFBT.rule.FBTMarkOptRequest;
 import org.apache.hadoop.hdfs.server.namenodeFBT.rule.InsertRequest;
 import org.apache.hadoop.hdfs.server.namenodeFBT.utils.StringUtility;
-import org.apache.hadoop.hdfs.server.namenode.DatanodeDescriptor;
+import org.apache.hadoop.hdfs.server.blockmanagement.DatanodeDescriptor;
 import org.apache.hadoop.hdfs.server.namenode.INode;
 import org.apache.hadoop.hdfs.server.namenode.INodeDirectory;
 import org.apache.hadoop.hdfs.server.namenode.INodeDirectoryWithQuota;

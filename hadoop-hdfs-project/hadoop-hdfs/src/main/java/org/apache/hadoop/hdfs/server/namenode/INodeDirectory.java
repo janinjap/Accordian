@@ -18,6 +18,7 @@
 package org.apache.hadoop.hdfs.server.namenode;
 
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
@@ -26,9 +27,11 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.PathIsNotDirectoryException;
 import org.apache.hadoop.fs.permission.PermissionStatus;
 import org.apache.hadoop.hdfs.DFSUtil;
+import org.apache.hadoop.hdfs.protocol.Block;
 import org.apache.hadoop.hdfs.protocol.QuotaExceededException;
 import org.apache.hadoop.hdfs.protocol.SnapshotException;
 import org.apache.hadoop.hdfs.server.namenode.INodeReference.WithCount;
@@ -36,8 +39,10 @@ import org.apache.hadoop.hdfs.server.namenode.snapshot.DirectorySnapshottableFea
 import org.apache.hadoop.hdfs.server.namenode.snapshot.DirectoryWithSnapshotFeature;
 import org.apache.hadoop.hdfs.server.namenode.snapshot.DirectoryWithSnapshotFeature.DirectoryDiffList;
 import org.apache.hadoop.hdfs.server.namenode.snapshot.Snapshot;
+import org.apache.hadoop.hdfs.server.protocol.NNClusterProtocol;
 import org.apache.hadoop.hdfs.util.Diff.ListType;
 import org.apache.hadoop.hdfs.util.ReadOnlyList;
+import org.apache.hadoop.ipc.RPC;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -933,4 +938,77 @@ public class INodeDirectory extends INodeWithAdditionalFields
     }
     return null;
   }
+  /**
+ * This is the external interface
+ * @param addrs
+ *            TODO
+ * @param fromCluster TODO
+ */// added by janin
+  INode getNode(String path, Map<Integer, InetSocketAddress> addrs, boolean fromCluster) {
+  if(fromCluster == false)
+   return getNode(getPathComponents(path));
+      else
+    return getNodeFromCluster(getPathComponents(path), addrs, null);
+  }
+  
+  
+  
+  
+  
+//appended by janin//
+ INode getNodeFromCluster(byte[][] components,
+     Map<Integer, InetSocketAddress> addrs, List<Integer> visited) {
+   if (visited == null) {
+     visited = new ArrayList<Integer>();
+   }
+   Integer now = new Integer(namenodeID);
+     visited.add(now);
+   INode[] curPath = new INode[components.length];
+   int pos = getExistingPathINodes(components, curPath) - 1;
+   if (curPath[components.length - 1] != null)
+     return curPath[components.length - 1];
+   if (!curPath[pos].isDirectory())
+     return null;
+   List<Integer> nodes = curPath[pos].getINodeLocations();
+   List<Integer> nodescopy = new ArrayList<Integer>(nodes);
+   for (Iterator<Integer> i = visited.iterator(); i.hasNext();) {
+     Integer v = i.next();
+     if (nodescopy.contains(v))
+       nodescopy.remove(v);
+   }
+   for (Iterator<Integer> it = nodescopy.iterator(); it.hasNext();) {
+     if (nodescopy.size() == 0)
+       break;
+     Integer curID = it.next();
+     nodescopy.remove(curID);
+     InetSocketAddress addr = addrs.get(curID);
+     NNClusterProtocol namenode;
+     Integer[] vitary = (Integer[]) visited.toArray(new Integer[0]);
+     int[] vitaryint = new int[vitary.length];
+     for(int k = 0;k < vitary.length;k++)
+       vitaryint[k] = vitary[k].intValue();
+     try {
+       namenode = (NNClusterProtocol) RPC.waitForProxy(
+           NNClusterProtocol.class, NNClusterProtocol.versionID,
+           addr, new Configuration());
+       INodeInfo target = namenode.getNodeFromOther(components,
+           vitaryint);
+       if(target == null)
+         return null;
+       return target.makeINode();
+     } catch (IOException e) {
+       System.err.println("exception");
+       e.printStackTrace();
+     }
+
+   }
+   return null;
+   // end of appended //
+ }
+
+@Override //janin added by eclipse
+public int collectSubtreeBlocksAndClear(List<Block> v) {
+  // TODO Auto-generated method stub
+  return 0;
+}
 }

@@ -661,7 +661,7 @@ public class NameNode implements NameNodeStatusMXBean {
       httpServer.setFSImage(getFSImage());
     } 
     
-    pauseMonitor = new JvmPauseMonitor(conf);
+    pauseMonitor = new JvmPauseMonitor(); //janin did this
     pauseMonitor.start();
     metrics.getJvmMetrics().setPauseMonitor(pauseMonitor);
     

@@ -82,9 +82,10 @@ public class INodeFile extends INodeWithAdditionalFields
       BITS = new LongBitFormat(name(), previous, length, min);
     }
 
-    static short getReplication(long header) {
+     static short getReplication(long header) {
       return (short)REPLICATION.BITS.retrieve(header);
     }
+
 
     static long getPreferredBlockSize(long header) {
       return PREFERRED_BLOCK_SIZE.BITS.retrieve(header);
@@ -101,7 +102,12 @@ public class INodeFile extends INodeWithAdditionalFields
   private long header = 0L;
 
   private BlockInfo[] blocks;
+  static final short BLOCKBITS = 48; //preferred blockedsize janin
+  static final long HEADERMASK = 0xffffL << BLOCKBITS;//janin
 
+  public short getReplication() { //from old INodeFile by janin
+    return (short) ((header & HEADERMASK) >> BLOCKBITS);
+  }
   INodeFile(long id, byte[] name, PermissionStatus permissions, long mtime,
       long atime, BlockInfo[] blklist, short replication,
       long preferredBlockSize) {

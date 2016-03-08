@@ -25,6 +25,7 @@ import java.util.List;
 
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.fs.permission.PermissionStatus;
+import org.apache.hadoop.hdfs.protocol.Block;
 import org.apache.hadoop.hdfs.protocol.QuotaExceededException;
 import org.apache.hadoop.hdfs.server.namenode.snapshot.DirectoryWithSnapshotFeature;
 import org.apache.hadoop.hdfs.server.namenode.snapshot.Snapshot;
@@ -456,6 +457,12 @@ public abstract class INodeReference extends INode {
         return this.getParentReference();
       }
     }
+
+    @Override
+    public int collectSubtreeBlocksAndClear(List<Block> v) { //janin
+      // TODO Auto-generated method stub
+      return 0;
+    }
   }
   
   /** A reference with a fixed name. */
@@ -614,6 +621,12 @@ public abstract class INodeReference extends INode {
       }
       return snapshot;
     }
+
+    @Override
+    public int collectSubtreeBlocksAndClear(List<Block> v) { //janin
+      // TODO Auto-generated method stub
+      return 0;
+    }
   }
   
   public static class DstReference extends INodeReference {
@@ -746,6 +759,12 @@ public abstract class INodeReference extends INode {
       } else {
         return Snapshot.CURRENT_STATE_ID;
       }
+    }
+
+    @Override
+    public int collectSubtreeBlocksAndClear(List<Block> v) { //janin
+      // TODO Auto-generated method stub
+      return 0;
     }
   }
 }

@@ -36,6 +36,8 @@ import org.apache.hadoop.hdfs.protocol.proto.NamenodeProtocolProtos.GetMostRecen
 import org.apache.hadoop.hdfs.protocol.proto.NamenodeProtocolProtos.GetMostRecentCheckpointTxIdResponseProto;
 import org.apache.hadoop.hdfs.protocol.proto.NamenodeProtocolProtos.GetTransactionIdRequestProto;
 import org.apache.hadoop.hdfs.protocol.proto.NamenodeProtocolProtos.GetTransactionIdResponseProto;
+import org.apache.hadoop.hdfs.protocol.proto.NamenodeProtocolProtos.IsUpgradeFinalizedRequestProto;
+import org.apache.hadoop.hdfs.protocol.proto.NamenodeProtocolProtos.IsUpgradeFinalizedResponseProto;
 import org.apache.hadoop.hdfs.protocol.proto.NamenodeProtocolProtos.RegisterRequestProto;
 import org.apache.hadoop.hdfs.protocol.proto.NamenodeProtocolProtos.RegisterResponseProto;
 import org.apache.hadoop.hdfs.protocol.proto.NamenodeProtocolProtos.RollEditLogRequestProto;
@@ -221,5 +223,13 @@ public class NamenodeProtocolServerSideTranslatorPB implements
     }
     return VersionResponseProto.newBuilder()
         .setInfo(PBHelper.convert(info)).build();
+  }
+
+  @Override //janin added this from eclipse's recommendation
+  public IsUpgradeFinalizedResponseProto isUpgradeFinalized(
+      RpcController controller, IsUpgradeFinalizedRequestProto request)
+      throws ServiceException {
+    // TODO Auto-generated method stub
+    return null;
   }
 }

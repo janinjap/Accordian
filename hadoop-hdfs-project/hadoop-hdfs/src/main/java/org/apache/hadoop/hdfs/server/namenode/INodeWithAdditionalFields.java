@@ -17,10 +17,14 @@
  */
 package org.apache.hadoop.hdfs.server.namenode;
 
+import java.util.List;
+
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.fs.permission.PermissionStatus;
+import org.apache.hadoop.hdfs.protocol.Block;
 import org.apache.hadoop.hdfs.protocol.QuotaExceededException;
+import org.apache.hadoop.hdfs.server.namenode.Quota.Counts;
 import org.apache.hadoop.hdfs.server.namenode.snapshot.Snapshot;
 import org.apache.hadoop.hdfs.util.LongBitFormat;
 import org.apache.hadoop.util.LightWeightGSet.LinkedElement;
@@ -32,7 +36,7 @@ import com.google.common.base.Preconditions;
  * access time and modification time.
  */
 @InterfaceAudience.Private
-public abstract class INodeWithAdditionalFields extends INode
+public  class INodeWithAdditionalFields extends INode
     implements LinkedElement {
   static enum PermissionStatusFormat {
     MODE(null, 16),
@@ -367,5 +371,46 @@ public abstract class INodeWithAdditionalFields extends INode
 
   public final Feature[] getFeatures() {
     return features;
+  }
+
+  @Override
+  void recordModification(int latestSnapshotId) throws QuotaExceededException { //janin
+    // TODO Auto-generated method stub
+    
+  }
+
+  @Override
+  public Counts cleanSubtree(int snapshotId, int priorSnapshotId,//janin
+      BlocksMapUpdateInfo collectedBlocks, List<INode> removedINodes,
+      boolean countDiffChange) throws QuotaExceededException {
+    // TODO Auto-generated method stub
+    return null;
+  }
+
+  @Override
+  public void destroyAndCollectBlocks(BlocksMapUpdateInfo collectedBlocks,//janin
+      List<INode> removedINodes) {
+    // TODO Auto-generated method stub
+    
+  }
+
+  @Override
+  public ContentSummaryComputationContext computeContentSummary(//janin
+      ContentSummaryComputationContext summary) {
+    // TODO Auto-generated method stub
+    return null;
+  }
+
+  @Override
+  public Counts computeQuotaUsage(Counts counts, boolean useCache,//janin
+      int lastSnapshotId) {
+    // TODO Auto-generated method stub
+    return null;
+  }
+
+  @Override
+  public int collectSubtreeBlocksAndClear(List<Block> v) {//janin
+    // TODO Auto-generated method stub
+    return 0;
   }
 }

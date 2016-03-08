@@ -8,6 +8,7 @@ import java.util.List;
 
 import org.apache.hadoop.hdfs.protocol.Block;
 import org.apache.hadoop.hdfs.protocol.DatanodeInfo;
+import org.apache.hadoop.hdfs.protocol.ExtendedBlock;
 import org.apache.hadoop.hdfs.protocol.LocatedBlock;
 import org.apache.hadoop.hdfs.protocol.LocatedBlocks;
 import org.apache.hadoop.hdfs.server.blockmanagement.DatanodeDescriptor;
@@ -299,7 +300,7 @@ public class FBTGetAdditionalBlockNoCouplingVisitor extends FBTNodeVisitor {
 	            	}
 
 	            	// Create next block
-	            	LocatedBlock lb = new LocatedBlock(newBlock, targets, fileLength); //Extendedblocks vs Block
+	            	LocatedBlock lb = new LocatedBlock(new ExtendedBlock(newBlock), targets, fileLength); //Extendedblocks vs Block
 	            	endLock(self);
 	            	_response = new GetAdditionalBlockResponse(
                           (GetAdditionalBlockRequest) _request, self, _key, lb, _directory.getOwner());

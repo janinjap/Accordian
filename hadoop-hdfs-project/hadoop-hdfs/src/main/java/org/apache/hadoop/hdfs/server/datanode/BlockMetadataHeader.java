@@ -82,7 +82,10 @@ public class BlockMetadataHeader {
    */
   public static BlockMetadataHeader preadHeader(FileChannel fc)
       throws IOException {
-    byte arr[] = new byte[2 + DataChecksum.HEADER_LEN];
+
+    // Misc constants
+    final int HEADER_LEN = 5; /// 1 byte type and 4 byte len
+    byte arr[] = new byte[2 + HEADER_LEN]; //janin override from DataCheckSum.HEADER_LEn
     ByteBuffer buf = ByteBuffer.wrap(arr);
 
     while (buf.hasRemaining()) {
